@@ -1,16 +1,20 @@
-# Global-Startup-Ecosystem-Analytics
+# 🌍Global-Startup-Ecosystem-Analytics
+---
 ## 📖 Project Overview
 
 Global Startup Ecosystem Analytics is an interactive data analytics dashboard that provides comprehensive insights into startup funding, investor activity, industry growth, and market trends. The project leverages Python-based data analysis and visualization techniques to transform raw startup data into meaningful business insights. It enables users to explore startup performance, funding patterns, investor behavior, and quarterly market growth through interactive dashboards.
 
+---
 ## Problem Statement
 
 Startups generate large amounts of funding and market data, but it is often scattered across different sources, making it difficult to analyze investment trends, industry growth, and regional startup performance. This project provides an interactive analytics dashboard to explore the global startup ecosystem and support data-driven decision-making.
 
+---
 ## Solution
 
 Develop an interactive analytics dashboard that consolidates startup, funding, and investor data into a single platform. The dashboard provides insights into funding trends, startup growth, investor activity, and industry performance through dynamic visualizations and data analysis.
 
+---
 ## Dataset used
 [Global Startup Funding Rounds 2020–2026](https://www.kaggle.com/datasets/meruvakodandasuraj/global-startup-funding-rounds-20202026?resource=download) - from kaggle
 
@@ -22,6 +26,7 @@ Dataset Files
 | `investors.csv`         | 73      | Lead investor profiles with type, AUM, and deal activity. |
 | `quarterly_summary.csv` | 25      | Aggregated quarterly market metrics. |
 
+---
 ## 📊 Business Questions Answered
 
 ### 🚀 Startup Analysis
@@ -51,14 +56,7 @@ Dataset Files
 - How many funding deals occur each quarter?
 - Is startup funding accelerating or slowing down over time?
 
-# 🌍 Global Startup Ecosystem Analytics
-
-## 📖 Project Overview
-
-Global Startup Ecosystem Analytics is an interactive data analytics dashboard that provides comprehensive insights into startup funding, investor activity, industry growth, and market trends. The project leverages Python-based data analysis and visualization techniques to transform raw startup data into meaningful business insights. It enables users to explore startup performance, funding patterns, investor behavior, and quarterly market growth through interactive dashboards.
-
 ---
-
 ## 🛠️ Tech Stack
 
 ### Programming Language
@@ -79,7 +77,7 @@ Global Startup Ecosystem Analytics is an interactive data analytics dashboard th
 - Jupyter Notebook
 - VS Code
 - Git & GitHub
-
+---
 ## 📈 Dashboard Features
 
 ### 🏠 Executive Dashboard
@@ -122,7 +120,8 @@ Global Startup Ecosystem Analytics is an interactive data analytics dashboard th
 - Filter by Funding Stage
 - Filter by Quarter
 - Dynamic Charts and KPIs
-
+  
+---
 ## 📁 Project Structure
 
 ```
@@ -158,3 +157,9 @@ Global-Startup-Ecosystem-Analytics/
 ├── README.md
 └── LICENSE
 
+---
+🚀 How to Run
+---
+📸 Dashboard Screenshots
+---
+📄 Future Improvements
