@@ -10,7 +10,7 @@ investors = pd.read_csv("investors.csv")
 admin_url = URL.create(
     drivername = "postgresql+psycopg2",
     username = "postgres",
-    password = "Simran@2754",
+    password = "your_password",
     host = "localhost",
     port = 5432,
     database = "postgres"
@@ -31,7 +31,7 @@ print("Database created!")
 db_url = URL.create(
     drivername = "postgresql+psycopg2",
     username = "postgres",
-    password = "Simran@2754",
+    password = "your_password",
     host = "localhost",
     port = 5432,
     database = "startup_ecosystem"
