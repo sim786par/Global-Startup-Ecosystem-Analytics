@@ -2,17 +2,9 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL
 
-db_url = URL.create(
-    drivername = "postgresql+psycopg2",
-    username = "postgres",
-    password = "Simran@2754",
-    host = "localhost",
-    port = 5432,
-    database = "startup_ecosystem"
-)
-engine = create_engine(db_url)
-with engine.connect() as conn:
-    print(conn.execute(text("SELECT current_database()")).scalar())
+# ==========================================
+# Startup Query
+# ==========================================
 
 #filter options
 def get_filter_options(conn):
@@ -69,19 +61,6 @@ LIMIT 5;
 
     """
     return pd.read_sql_query(text(query), conn)
-# # Which industries are experiencing the fastest growth?
-# def get_highest_industry(conn):
-#     query="""
-#     SELECT 
-#         s.sector AS industry,
-#         count(DISTINCT s.startup_id) AS total_startup,
-#         SUM(f.amount_million_usd) AS total_funding_raised
-#     FROM startup_details AS s
-#     LEFT JOIN funding_round_details AS f ON s.startup_id = f.startup_id
-#     GROUP BY s.sector
-#     ORDER BY total_funding_raised DESC;
-#     """
-#     return pd.read_sql_query(text(query),conn)
 # How are startups distributed across different countries?
 def get_geographic_distribution(conn):
     query="""
@@ -132,15 +111,48 @@ def get_employee_distribution(conn):
     ORDER BY MIN(employee_count) ASC;
     """
     return pd.read_sql_query(text(query), conn)
+
+# ==========================================
+# Funding Query
+# ==========================================
+
+# funding directory
+def get_funding_directory(conn):
+    query = """SELECT
+        startup_name,funding_date,year,quarter,funding_stage,amount_million_usd,
+        lead_investor,investor_type,sector,country 
+    FROM funding_round_details;
+    """
+    return pd.read_sql_query(text(query),conn)
+# funding filters
+def get_funding_filters(conn):
+    quarter = pd.read_sql_query(text("SELECT DISTINCT quarter FROM funding_round_details "),conn)['quarter'].to_list()
+    funding_stage = pd.read_sql_query(text("SELECT DISTINCT funding_stage FROM funding_round_details"),conn)['funding_stage'].to_list()
+    sector = pd.read_sql_query(text("SELECT DISTINCT sector FROM funding_round_details"),conn)['sector'].to_list()
+    return {'quarters':quarter,'funding_stages':funding_stage,'sectors':sector}
+# kpi card
+def funding_kpi_card(conn):
+    query= """
+    SELECT
+        COUNT(*) AS total_rounds,
+        ROUND(SUM(amount_million_usd::NUMERIC)/1000.0,1) AS total_capital,
+        ROUND(SUM(pre_money_valuation_million_usd::NUMERIC)/1000.0,1) AS pre_money,
+        ROUND(SUM(post_money_valuation_million_usd::NUMERIC)/1000.0,1) AS post_money,
+        ROUND(AVG(amount_million_usd::NUMERIC), 1) AS avg_deal_millions
+    FROM funding_round_details;
+    """
+    return pd.read_sql_query(text(query), conn)
 # What is the average funding amount at each funding stage?
 def get_funding_stage_by_amount(conn):
     query="""
     SELECT 
         funding_stage,
+        COUNT(*) AS round_count,
+        ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY amount_million_usd::NUMERIC)::NUMERIC, 1) AS median_check_millions,
         ROUND(AVG(amount_million_usd::NUMERIC), 2) AS average_funding
         FROM funding_round_details
         GROUP BY funding_stage
-        ORDER BY funding_stage;
+        ORDER BY average_funding DESC;
     """
     return pd.read_sql_query(text(query), conn)
 # How have funding trends changed over different quarters?
@@ -148,10 +160,23 @@ def get_funding_trend(conn):
     query="""
     SELECT 
         quarter,
-        SUM(amount_million_usd) AS funding_amount
+        SUM(amount_million_usd) AS funding_amount,
+        COUNT(*) AS deal_volume
         FROM funding_round_details
         GROUP BY quarter
         ORDER BY quarter;
+    """
+    return pd.read_sql_query(text(query), conn)
+# top 10 startup
+def get_startup_by_funding(conn):
+    query = """
+    SELECT 
+        startup_name,
+        ROUND(SUM(amount_million_usd::NUMERIC) / 1000.0, 2) AS amount
+    FROM funding_round_details
+    GROUP BY startup_name
+    ORDER BY amount DESC
+    LIMIT 10;
     """
     return pd.read_sql_query(text(query), conn)
 # Which countries receive the highest funding?
@@ -167,40 +192,22 @@ def get_highest_funding_by_country(conn):
     ORDER BY total_funding_raised DESC; 
     """
     return pd.read_sql_query(text(query), conn)
-# Which countries receive the highest startup funding?
-def get_top_startup_per_country(conn):
-    query = """
-    WITH ranked_startups AS (
+# sector vs investors
+def get_funding_stage(conn):
+    query="""
         SELECT 
-            country,
-            startup_name,
-            SUM(amount_million_usd::NUMERIC) AS individual_funding,
-            ROW_NUMBER() OVER(PARTITION BY country ORDER BY SUM(amount_million_usd::NUMERIC) DESC) as rank
+            funding_stage,
+            SUM(amount_million_usd) AS amount
         FROM funding_round_details
-        WHERE country IS NOT NULL
-          AND amount_million_usd IS NOT NULL
-        GROUP BY country, startup_name
-    )
-    SELECT country, startup_name, individual_funding
-    FROM ranked_startups
-    WHERE rank = 1
-    ORDER BY individual_funding DESC;
+        GROUP BY funding_stage
+        ORDER BY amount;
     """
-    return pd.read_sql_query(text(query), conn)
-# Which sectors attract the most investment?
-def get_sector_investment_data(conn):
-    query = """
-    SELECT 
-        sector,
-        SUM(amount_million_usd::NUMERIC) AS total_investment,
-        AVG(amount_million_usd::NUMERIC) AS average_deal_size,
-        SUM(num_investors::INT) AS total_investor_appearances
-    FROM funding_round_details
-    WHERE sector IS NOT NULL AND amount_million_usd IS NOT NULL 
-    GROUP BY sector
-    ORDER BY total_investment DESC; 
-    """
-    return pd.read_sql_query(text(query), conn)
+    return pd.read_sql_query(text(query),conn)
+
+# ==========================================
+# Investors Query
+# ==========================================
+
 # Who are the most active investors? tOP 10 
 def get_active_investor(conn):
     query="""
@@ -267,6 +274,20 @@ def get_average_deal_size(conn):
     ORDER BY avg_deal_size_millions DESC;
     """
     return pd.read_sql_query(text(query), conn)
+# Which sectors attract the most investment?
+def get_sector_investment_data(conn):
+    query = """
+    SELECT 
+        sector,
+        SUM(amount_million_usd::NUMERIC) AS total_investment,
+        AVG(amount_million_usd::NUMERIC) AS average_deal_size,
+        SUM(num_investors::INT) AS total_investor_appearances
+    FROM funding_round_details
+    WHERE sector IS NOT NULL AND amount_million_usd IS NOT NULL 
+    GROUP BY sector
+    ORDER BY total_investment DESC; 
+    """
+    return pd.read_sql_query(text(query), conn)
 # concentration
 def get_funding_concentration(conn):
     query = """
@@ -293,44 +314,64 @@ def get_funding_concentration(conn):
     FROM ordered_investors;
     """
     return pd.read_sql_query(text(query), conn)
-def get_quarterly_market_growth(conn):
+
+# ==========================================
+# Market Query
+# ==========================================
+
+# market filters
+def get_market_filter_options(conn):
+    quarter = pd.read_sql_query(text("SELECT DISTINCT quarter FROM quarterly_summary ORDER BY quarter;"), conn)['quarter'].tolist()
+    year = pd.read_sql_query(text("SELECT DISTINCT year FROM quarterly_summary ORDER BY year;"), conn)['year'].tolist()
+    period = pd.read_sql_query(text("SELECT DISTINCT period FROM quarterly_summary ORDER BY period;"), conn)['period'].tolist()
+    return {"quarters":quarter,"years": year,"periods":period}
+# directory
+# kpi cards
+def get_market_quarterly_metrics(conn):
     query = """
+    WITH base AS (
+        SELECT 
+            period,year::INT AS yr,quarter AS qtr,
+            total_funding_million_usd::NUMERIC AS funding_m,
+            total_deals::INT AS deals,
+            avg_deal_size_million_usd::NUMERIC AS avg_deal_m,
+            median_deal_size_million_usd::NUMERIC AS median_deal_m,
+            median_valuation_million_usd::NUMERIC AS median_val_m,
+            unique_startups::INT AS unique_startups,
+            unique_investors::INT AS unique_investors
+        FROM quarterly_summary
+        WHERE period IS NOT NULL AND period <> ''
+    ),
+    lagged AS (
+        SELECT *,
+            LAG(funding_m) OVER (ORDER BY yr ASC, qtr ASC) AS prev_funding_m,
+            LAG(deals) OVER (ORDER BY yr ASC, qtr ASC) AS prev_deals,
+            LAG(median_val_m) OVER (ORDER BY yr ASC, qtr ASC) AS prev_val_m
+        FROM base
+    )
     SELECT 
-        period,
-        year::INT AS funding_year,
-        quarter AS funding_quarter,
-        total_deals::INT AS deals_count,
-        total_funding_million_usd::NUMERIC AS total_capital_raised,
-        avg_deal_size_million_usd::NUMERIC AS avg_deal_size,
-        median_deal_size_million_usd::NUMERIC AS median_deal_size,
-        median_valuation_million_usd::NUMERIC AS median_startup_valuation,
-        unique_startups::INT AS startups_count,
-        unique_investors::INT AS investors_count
-    FROM quarterly_summary
-    WHERE period IS NOT NULL AND period <> ''
-    -- Orders chronologically by year first, then by the quarterly sequence
-    ORDER BY year ASC, quarter ASC; 
+        period,yr,qtr,funding_m,deals,avg_deal_m,median_deal_m,
+        median_val_m,unique_startups,unique_investors,
+        ROUND(((funding_m - prev_funding_m) / NULLIF(prev_funding_m, 0)) * 100.0, 1) AS qoq_growth_pct,
+        ROUND(((deals - prev_deals)::NUMERIC / NULLIF(prev_deals, 0)) * 100.0, 1) AS deals_qoq_pct,
+        ROUND(((median_val_m - prev_val_m) / NULLIF(prev_val_m, 0)) * 100.0, 1) AS val_qoq_pct
+    FROM lagged
+    ORDER BY yr ASC, qtr ASC;
     """
     return pd.read_sql_query(text(query), conn)
-def get_comprehensive_market_trends(conn):
+def get_valuation_by_stage_progression(conn):
     query = """
     SELECT 
-        period,
-        year::INT AS funding_year,
-        quarter AS funding_quarter,
-        total_deals::INT AS funding_deals_count,
-        total_funding_million_usd::NUMERIC AS total_capital_raised,
-        median_valuation_million_usd::NUMERIC AS median_startup_valuation,
-       
-        ROUND(
-            (total_funding_million_usd::NUMERIC - LAG(total_funding_million_usd::NUMERIC) OVER (ORDER BY year ASC, quarter ASC))
-            , 2
-        ) AS quarter_over_quarter_acceleration
-    FROM quarterly_summary
-    WHERE period IS NOT NULL
-    ORDER BY year ASC, quarter ASC;
+        quarter AS period,
+        funding_stage,
+        ROUND(AVG(post_money_valuation_million_usd::NUMERIC), 1) AS avg_valuation_m
+    FROM funding_round_details
+    WHERE quarter IS NOT NULL AND funding_stage IS NOT NULL
+      AND post_money_valuation_million_usd IS NOT NULL
+    GROUP BY quarter, funding_stage
+    ORDER BY quarter ASC;
     """
     return pd.read_sql_query(text(query), conn)
 
-with engine.connect() as conn:
-    print(get_active_investor(conn))
+# with engine.connect() as conn:
+#     print(get_active_investor(conn))
