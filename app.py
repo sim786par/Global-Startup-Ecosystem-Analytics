@@ -1,4 +1,4 @@
-# app.py
+import os
 import streamlit as st
 from sqlalchemy import create_engine
 from sqlalchemy.engine import URL
@@ -9,15 +9,22 @@ from views import startup_page, funding_page, investors_page, market_page
 # 1. Global Page Configuration
 st.set_page_config(page_title="Startup Ecosystem Hub", page_icon="🚀", layout="wide")
 
+# Load credentials securely from .streamlit/secrets.toml
+db_config = st.secrets["postgres"]
+
 # 2. Cached Database Engine (Created once, shared across all 4 files)
-db_url = URL.create(
-    drivername="postgresql+psycopg2",
-    username="postgres",
-    password="Simran@2754",
-    host="localhost",
-    port=5432,
-    database="startup_ecosystem"
-)
+if "DB_HOST" in os.environ:
+    db_url = URL.create(
+        drivername="postgresql+psycopg2",
+        username=os.environ["DB_USER"],
+        password=os.environ["DB_PASSWORD"],
+        host=os.environ["DB_HOST"],
+        port=int(os.environ.get("DB_PORT", 5432)),
+        database=os.environ.get("DB_NAME"),
+        query={"sslmode": "require"}
+    )
+else:
+    db_url = URL.create(**st.secrets["postgres"])
 
 @st.cache_resource
 def get_db_engine(url):
