@@ -10,19 +10,17 @@ from views import startup_page, funding_page, investors_page, market_page
 st.set_page_config(page_title="Startup Ecosystem Hub", page_icon="🚀", layout="wide")
 
 # Load credentials securely from .streamlit/secrets.toml
-db_config = st.secrets["postgres"]
-
-# 2. Cached Database Engine (Created once, shared across all 4 files)
-if "DB_HOST" in os.environ:
+if os.environ.get("DB_HOST"):
     db_url = URL.create(
         drivername="postgresql+psycopg2",
-        username=os.environ["DB_USER"],
-        password=os.environ["DB_PASSWORD"],
-        host=os.environ["DB_HOST"],
+        username=os.environ.get("DB_USER"),
+        password=os.environ.get("DB_PASSWORD"),
+        host=os.environ.get("DB_HOST"),
         port=int(os.environ.get("DB_PORT", 5432)),
         database=os.environ.get("DB_NAME"),
         query={"sslmode": "require"}
     )
+# 2. Fall back to .streamlit/secrets.toml when running locally
 else:
     db_url = URL.create(**st.secrets["postgres"])
 
