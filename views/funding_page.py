@@ -119,26 +119,31 @@ def render_page(engine):
     with st.container(border=True):
         st.subheader("Top 10 Most Funded Global Entities (Cumulative)")
         st.caption("Lifetime equity capital absorbed by institutional applications ($ Billions)")
+        
         with engine.connect() as conn:
             startup10 = queries.get_startup_by_funding(conn)
+            
         if not startup10.empty:
             max_cum = startup10['amount'].max()
-            left_col,right_col = st.columns(2)
+            left_col, right_col = st.columns(2)
 
-            for idx,row in startup10.iterrows():
-                rank = idx+1
-                target_col = left_col if rank<=5 else right_col
-                bar_pct = int((row['amount']/max_cum)*100) if max_cum>0 else 0
+            for idx, row in startup10.iterrows():
+                rank = idx + 1
+                target_col = left_col if rank <= 5 else right_col
+                bar_pct = int((row['amount'] / max_cum) * 100) if max_cum > 0 else 0
+                
                 with target_col:
                     st.markdown(
                         f"""<div style="margin-bottom: 14px;">
                             <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;">
                                 <b>{row['startup_name']}</b>
-                                <span style="font-size: 11px; color: #475569;">AMOUNT: <b>${row['amount']:.2f}M</b> </span>
+                                <span style="font-size: 11px; color: #475569;">AMOUNT: <b>${row['amount']:.2f}M</b></span>
                             </div>
                             <div style="background-color: #e2e8f0; border-radius: 4px; height: 6px; margin-bottom: 3px;">
-                            <div style="background-color: "#4f46e5"; width: {bar_pct}%; height: 6px; border-radius: 4px;"></div>
-                           """,unsafe_allow_html=True
+                                <div style="background-color: #4f46e5; width: {bar_pct}%; height: 6px; border-radius: 4px;"></div>
+                            </div>
+                        </div>""",
+                        unsafe_allow_html=True
                     )
     chart1,chart2 =st.columns(2)
     with chart1:
