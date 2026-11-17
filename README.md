@@ -67,11 +67,11 @@ Dataset Files
 - NumPy
 - Matplotlib
 - Plotly
-- Dash
-- SQLite3
+- Streamlit
+- PostgreSQL
 
 ### Database
-- SQLite
+- PostgreSQL
 
 ### Development Tools
 - Jupyter Notebook
@@ -79,13 +79,6 @@ Dataset Files
 - Git & GitHub
 ---
 ## 📈 Dashboard Features
-
-### 🏠 Executive Dashboard
-- Total Startups
-- Total Funding
-- Total Investors
-- Average Valuation
-- Quarterly Market Growth
 
 ### 🚀 Startup Analytics
 - Top-Funded Startups
@@ -125,40 +118,34 @@ Dataset Files
 ## 📁 Project Structure
 
 ```
-Global-Startup-Ecosystem-Analytics/
+startup_dashboard/
 │
-├── data/
-│   ├── startups.csv
-│   ├── funding_rounds.csv
-│   ├── investors.csv
+├── .streamlit/                      # Streamlit configuration & local secrets
+│   └── secrets.toml                 # Database credentials (ignored by Git)
+│
+├── data/                            # Raw input CSV files
+│   ├── startup_details.csv
+│   ├── funding_round_details.csv
+│   ├── investors_details.csv
 │   └── quarterly_summary.csv
 │
-├── assets/
-│   ├── styles.css
-│   └── images/
+├── views/                           # Modular UI pages for the dashboard
+│   ├── __init__.py                  # Marks 'views' as a Python package
+│   ├── startup_page.py              # Page 1: Startup Intelligence
+│   ├── funding_page.py              # Page 2: Funding Intelligence
+│   ├── investor_page.py             # Page 3: Investor Intelligence
+│   └── market_page.py               # Page 4: Market Intelligence
 │
-├── notebooks/
-│   ├── data_cleaning.ipynb
-│   ├── exploratory_analysis.ipynb
-│   └── feature_engineering.ipynb
-│
-├── dashboard/
-│   ├── app.py
-│   ├── layouts.py
-│   ├── callbacks.py
-│   └── components.py
-│
-├── database/
-│   └── startup_data.db
-│
-├── screenshots/
-│
-├── requirements.txt
-├── README.md
-└── LICENSE
+├── data_preprocessing.py                 # Step 1: Cleans & validates raw CSV data
+├── database_loader.py               # Step 2: Creates DB & loads tables (reads secrets.toml)
+├── sqlanalysis_queries.py           # Step 3: Pure SQL SELECT functions (no credentials)
+├── app.py                           # Step 4: Main Streamlit app & sidebar router
+├── .gitignore                       # Blocks secrets.toml, venv/, and __pycache__/
+└── requirements.txt                 # Locked Python dependencies for deployment
 
 ---
 🚀 How to Run
+python -m streamlit run app.py
 ---
 📸 Dashboard Screenshots
 ---
