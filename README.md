@@ -1,4 +1,5 @@
 # 🌍Global-Startup-Ecosystem-Analytics
+🔗 **Live Deployed Dashboard:** [https://global-startup-ecosystem-analytics.onrender.com](https://global-startup-ecosystem-analytics.onrender.com)
 ---
 ## 📖 Project Overview
 
